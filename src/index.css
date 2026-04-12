@@ -473,21 +473,3 @@ input:focus, textarea:focus, select:focus {
 .hero-user-card .hero-user-email {
   color: rgba(255, 255, 255, 0.7);
 }
-
-@keyframes loading {
-  from { width: 0% }
-  to { width: 100% }
-}
-
-.animate-loading {
-  animation: loading 2s linear forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
-}
