@@ -5,6 +5,19 @@
 
 import { GoogleGenAI } from "@google/genai";
 
+const executeWithRetry = async (operation: () => Promise<any>, retries = 1, delay = 60000): Promise<any> => {
+  try {
+    return await operation();
+  } catch (error: any) {
+    if (error?.status === 429 && retries > 0) {
+      console.warn(`Quota exceeded (429). Retrying in ${delay / 1000}s...`);
+      await new Promise(res => setTimeout(res, delay));
+      return executeWithRetry(operation, retries - 1, delay);
+    }
+    throw error;
+  }
+};
+
 export const geminiService = {
   processAudio: async (audioBlob: Blob, apiKey: string) => {
     const ai = new GoogleGenAI({ apiKey });
@@ -71,33 +84,35 @@ export const geminiService = {
       }
     `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [
-        {
-          parts: [
-            { text: prompt },
-            {
-              inlineData: {
-                mimeType: audioBlob.type,
-                data: base64Audio
+    return executeWithRetry(async () => {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [
+          {
+            parts: [
+              { text: prompt },
+              {
+                inlineData: {
+                  mimeType: audioBlob.type,
+                  data: base64Audio
+                }
               }
-            }
-          ]
+            ]
+          }
+        ],
+        config: {
+          responseMimeType: "application/json"
         }
-      ],
-      config: {
-        responseMimeType: "application/json"
-      }
-    });
+      });
 
-    const text = response.text;
-    if (!text) throw new Error("Invalid AI response format");
-    
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Invalid AI response format");
-    
-    return JSON.parse(jsonMatch[0]);
+      const text = response.text;
+      if (!text) throw new Error("Invalid AI response format");
+      
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("Invalid AI response format");
+      
+      return JSON.parse(jsonMatch[0]);
+    });
   },
 
   transcribeOnly: async (audioBlob: Blob, apiKey: string) => {
@@ -191,17 +206,19 @@ export const geminiService = {
       }
     `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [{ parts: [{ text: prompt + "\n\nTranscript:\n" + transcript }] }],
-      config: { responseMimeType: "application/json" }
-    });
+    return executeWithRetry(async () => {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ parts: [{ text: prompt + "\n\nTranscript:\n" + transcript }] }],
+        config: { responseMimeType: "application/json" }
+      });
 
-    const text = response.text;
-    if (!text) throw new Error("Invalid AI response format");
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Invalid AI response format");
-    return JSON.parse(jsonMatch[0]);
+      const text = response.text;
+      if (!text) throw new Error("Invalid AI response format");
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("Invalid AI response format");
+      return JSON.parse(jsonMatch[0]);
+    });
   },
 
   askAssistant: async (context: string, question: string, apiKey: string) => {
@@ -225,42 +242,5 @@ export const geminiService = {
     return response.text || "I couldn't generate an answer. Please try again.";
   },
   
-  extractQuestions: async (transcript: string, apiKey: string) => {
-    const ai = new GoogleGenAI({ apiKey });
 
-    const prompt = `
-      You are a professional auditor. 
-      Analyze the provided meeting transcript to identify all explicit and implicit questions asked during the session.
-      For each question found:
-      1. State the question clearly.
-      2. If an answer was provided in the transcript, extract it precisely.
-      3. If no answer was found in the text, use your analytical capabilities based on the overall context of the meeting to provide a highly probable answer.
-      
-      Questions should include:
-      - Deadlines and schedules
-      - Ownership and responsibility
-      - Technical requirements
-      - Policy or procedural queries
-      
-      Format the response as JSON array:
-      [
-        { "question": "What is the deadline for the UI redesign?", "answer": "The deadline is April 15 as mentioned by Speaker 1." },
-        { "question": "Who is responsible for the database migration?", "answer": "Imran will handle the migration starting next Tuesday." }
-      ]
-    `;
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [{ parts: [{ text: prompt + "\n\nTranscript:\n" + transcript }] }],
-      config: { responseMimeType: "application/json" }
-    });
-
-    const text = response.text;
-    if (!text) return [];
-    
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) return [];
-    
-    return JSON.parse(jsonMatch[0]);
-  }
 };
