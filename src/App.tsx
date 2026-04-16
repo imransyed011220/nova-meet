@@ -10,7 +10,7 @@ import { Dashboard } from './pages/Dashboard';
 import { LoginPage } from './pages/LoginPage';
 import { LoadingProvider } from './hooks/useLoading';
 import { ToastProvider } from './hooks/useToast';
-import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
+import { SignedIn, SignedOut } from '@clerk/clerk-react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 import { useEffect } from 'react';
@@ -84,7 +84,7 @@ function App() {
                     </Layout>
                   </SignedIn>
                   <SignedOut>
-                    <RedirectToSignIn />
+                    <Navigate to="/login" replace />
                   </SignedOut>
                 </>
               } />
