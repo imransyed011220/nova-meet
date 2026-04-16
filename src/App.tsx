@@ -73,7 +73,7 @@ function App() {
                     </Layout>
                   </SignedIn>
                   <SignedOut>
-                    <Navigate to="/login" replace />
+                    <RedirectToSignIn />
                   </SignedOut>
                 </>
               } />

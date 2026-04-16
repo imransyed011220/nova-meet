@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap');
 /* ================================================================
    NOVA MEET — UNIFIED THEME SYSTEM
    All themes set via [data-theme] on <html>
@@ -241,7 +242,7 @@
 /* ============================================================
    TAILWIND 4 INTEGRATION
 ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap');
+
 @import "tailwindcss";
 
 @theme {

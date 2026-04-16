@@ -236,12 +236,27 @@ export const MeetingDetails: React.FC = () => {
     }
   };
 
-  const handleExtractQuestions = () => {
+  const handleExtractQuestions = async () => {
+    // If questions already exist from the initial analysis, just show them — no API call needed
     if (note?.extractedQuestions && note.extractedQuestions.length > 0) {
       setQuestions(note.extractedQuestions);
       showToast('Questions loaded from analysis');
-    } else {
-      showToast('No unaddressed questions were detected during the analysis.', 'error');
+      return;
+    }
+
+    // Fallback: only call API if no questions exist yet
+    if (!note?.transcript) return;
+    setIsExtractingQuestions(true);
+    try {
+      const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
+      const result = await geminiService.extractQuestions(note.transcript, apiKey);
+      setQuestions(result);
+      updateNote(note.id, { extractedQuestions: result });
+      showToast('AI Questions & Answers generated');
+    } catch (err) {
+      showToast('Failed to extract questions', 'error');
+    } finally {
+      setIsExtractingQuestions(false);
     }
   };
 
