@@ -23,6 +23,10 @@ export const useAudioRecorder = ({ onRecordingComplete, onDataAvailable, onError
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [liveTranscript, setLiveTranscript] = useState('');
 
+  // Refs to avoid stale closures in callbacks
+  const statusRef = useRef<RecordingStatus>('idle');
+  const recordingTimeRef = useRef(0);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recognitionRef = useRef<any>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -83,6 +87,7 @@ export const useAudioRecorder = ({ onRecordingComplete, onDataAvailable, onError
   const startRecording = useCallback(async (mode: RecordingMode = 'microphone') => {
     try {
       setStatus('listening');
+      statusRef.current = 'listening';
       setLiveTranscript('');
       if (audioUrl) {
         URL.revokeObjectURL(audioUrl);
@@ -189,17 +194,17 @@ export const useAudioRecorder = ({ onRecordingComplete, onDataAvailable, onError
         recognition.lang = 'en-US';
 
         recognition.onresult = (event: any) => {
-          let interimTranscript = '';
           let finalTranscript = '';
 
           for (let i = event.resultIndex; i < event.results.length; ++i) {
             if (event.results[i].isFinal) {
               finalTranscript += event.results[i][0].transcript;
-            } else {
-              interimTranscript += event.results[i][0].transcript;
             }
           }
-          setLiveTranscript(prev => prev + finalTranscript + interimTranscript);
+          // Only append final results to avoid duplication from interim text
+          if (finalTranscript) {
+            setLiveTranscript(prev => prev + finalTranscript);
+          }
         };
 
         recognition.onerror = (event: any) => {
@@ -231,7 +236,7 @@ export const useAudioRecorder = ({ onRecordingComplete, onDataAvailable, onError
       // Volume detection
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       const updateVolume = () => {
-        if (status === 'completed' || status === 'error') return;
+        if (statusRef.current === 'completed' || statusRef.current === 'error' || statusRef.current === 'idle') return;
         analyser.getByteFrequencyData(dataArray);
         let sum = 0;
         for (let i = 0; i < dataArray.length; i++) {
@@ -295,9 +300,12 @@ export const useAudioRecorder = ({ onRecordingComplete, onDataAvailable, onError
           if (audioBlob.size < 1000) {
             onError(AppErrorType.REC_TOO_SHORT);
             setStatus('error');
+            statusRef.current = 'error';
           } else {
-            onRecordingComplete(audioBlob, recordingTime);
+            // Use ref to get current recordingTime (avoids stale closure)
+            onRecordingComplete(audioBlob, recordingTimeRef.current);
             setStatus('completed');
+            statusRef.current = 'completed';
           }
           cleanupAudio();
           setVolume(0);
@@ -321,10 +329,15 @@ export const useAudioRecorder = ({ onRecordingComplete, onDataAvailable, onError
 
         mediaRecorder.start(1000);
         setStatus('recording');
+        statusRef.current = 'recording';
         setRecordingTime(0);
+        recordingTimeRef.current = 0;
 
         timerRef.current = setInterval(() => {
-          setRecordingTime((prev) => prev + 1);
+          setRecordingTime((prev) => {
+            recordingTimeRef.current = prev + 1;
+            return prev + 1;
+          });
         }, 1000);
 
       } catch (recorderErr) {
@@ -337,6 +350,7 @@ export const useAudioRecorder = ({ onRecordingComplete, onDataAvailable, onError
       const errorType = mapBrowserErrorToAppError(err);
       onError(errorType);
       setStatus('error');
+      statusRef.current = 'error';
       cleanupAudio();
     }
   }, [onRecordingComplete, onDataAvailable, onError, cleanupAudio, audioUrl]);
@@ -346,6 +360,7 @@ export const useAudioRecorder = ({ onRecordingComplete, onDataAvailable, onError
       mediaRecorderRef.current.stop();
       stopTimer();
       setStatus('processing');
+      statusRef.current = 'processing';
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());

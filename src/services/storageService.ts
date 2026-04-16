@@ -7,6 +7,31 @@ import { MeetingNote, AnalyticsData } from '../types';
 
 const STORAGE_KEY = 'ai_meeting_notes';
 
+// Safe localStorage write with quota overflow handling
+function safeSetItem(key: string, value: string): boolean {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e: any) {
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      console.warn('localStorage quota exceeded — trimming oldest notes');
+      // Try removing oldest notes to reclaim space
+      try {
+        const notes: MeetingNote[] = JSON.parse(localStorage.getItem(key) || '[]');
+        if (notes.length > 1) {
+          const trimmed = notes.slice(0, Math.ceil(notes.length * 0.75));
+          localStorage.setItem(key, JSON.stringify(trimmed));
+          // Retry the original write
+          localStorage.setItem(key, value);
+          return true;
+        }
+      } catch { /* exhausted — fall through */ }
+    }
+    console.error('localStorage write failed:', e);
+    return false;
+  }
+}
+
 export const storageService = {
   getNotes: (): MeetingNote[] => {
     const data = localStorage.getItem(STORAGE_KEY);
@@ -16,21 +41,21 @@ export const storageService = {
   saveNote: (note: MeetingNote) => {
     const notes = storageService.getNotes();
     const updatedNotes = [note, ...notes];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNotes));
+    safeSetItem(STORAGE_KEY, JSON.stringify(updatedNotes));
     return updatedNotes;
   },
 
   updateNote: (id: string, updates: Partial<MeetingNote>) => {
     const notes = storageService.getNotes();
     const updatedNotes = notes.map(n => n.id === id ? { ...n, ...updates } : n);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNotes));
+    safeSetItem(STORAGE_KEY, JSON.stringify(updatedNotes));
     return updatedNotes;
   },
 
   deleteNote: (id: string) => {
     const notes = storageService.getNotes();
     const updatedNotes = notes.filter(n => n.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNotes));
+    safeSetItem(STORAGE_KEY, JSON.stringify(updatedNotes));
     return updatedNotes;
   },
 

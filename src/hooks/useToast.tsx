@@ -48,20 +48,20 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
               className={`
-                pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border min-w-[280px] max-w-md
-                ${toast.type === 'success' ? 'bg-white dark:bg-slate-900 border-green-100 dark:border-green-900/30 text-green-600' : ''}
-                ${toast.type === 'error' ? 'bg-white dark:bg-slate-900 border-red-100 dark:border-red-900/30 text-red-600' : ''}
-                ${toast.type === 'info' ? 'bg-white dark:bg-slate-900 border-blue-100 dark:border-blue-900/30 text-blue-600' : ''}
+                pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border min-w-[280px] max-w-md bg-[var(--surface)]
+                ${toast.type === 'success' ? 'border-[var(--ok)]/30 text-[var(--ok)]' : ''}
+                ${toast.type === 'error' ? 'border-[var(--err)]/30 text-[var(--err)]' : ''}
+                ${toast.type === 'info' ? 'border-[var(--accent)]/30 text-[var(--accent)]' : ''}
               `}
             >
               {toast.type === 'success' && <CheckCircle2 size={18} />}
               {toast.type === 'error' && <AlertCircle size={18} />}
               
-              <p className="text-sm font-medium flex-1 text-slate-700 dark:text-slate-200">{toast.message}</p>
+              <p className="text-sm font-medium flex-1 text-[var(--text)]">{toast.message}</p>
               
               <button 
                 onClick={() => removeToast(toast.id)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                className="text-[var(--text3)] hover:text-[var(--text)] transition-colors"
               >
                 <X size={16} />
               </button>

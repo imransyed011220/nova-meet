@@ -10,12 +10,6 @@ if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
 }
 
-// Restore saved theme
-const savedTheme = localStorage.getItem('nova-theme');
-if (savedTheme === 'dark') {
-  document.documentElement.classList.add('dark');
-}
-
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

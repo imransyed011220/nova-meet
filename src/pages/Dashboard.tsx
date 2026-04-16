@@ -67,6 +67,7 @@ export const Dashboard: React.FC = () => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const handleFileUpload = async (file: File) => {
+    if (isProcessingLocal) return; // Prevent double-click
     setIsProcessingLocal(true);
     setIsUploading(true);
     setError(null);
@@ -174,6 +175,8 @@ export const Dashboard: React.FC = () => {
         setTimeout(() => {
           addNote(newNote);
           showToast('Meeting analyzed successfully');
+          setIsProcessingLocal(false);
+          setGlobalProgress(0);
           navigate(`/meeting/${newNote.id}`);
         }, 500);
       }, 2000);
@@ -189,6 +192,8 @@ export const Dashboard: React.FC = () => {
       setIsTranscribing(false);
       setIsSummarizing(false);
       setIsExtracting(false);
+      setIsProcessingLocal(false);
+      setGlobalProgress(0);
     }
   };
 

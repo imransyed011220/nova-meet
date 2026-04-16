@@ -104,7 +104,7 @@ export const RecordingPage: React.FC = () => {
   }, [status, setIsRecording, setIsProcessing]);
 
   const handleSaveAndAnalyze = async (meetingName: string) => {
-    if (!pendingAudio) return;
+    if (!pendingAudio || status === 'processing') return; // Prevent double-click
     
     setIsRenameModalOpen(false);
     setAppError(null);
@@ -198,6 +198,7 @@ export const RecordingPage: React.FC = () => {
         setTimeout(() => {
           addNote(newNote);
           showToast('Meeting recorded and analyzed successfully');
+          setGlobalProgress(0);
           navigate(`/meeting/${newNote.id}`);
         }, 500);
       }, 1200);
@@ -213,6 +214,7 @@ export const RecordingPage: React.FC = () => {
       setIsTranscribing(false);
       setIsSummarizing(false);
       setIsExtracting(false);
+      setGlobalProgress(0);
     }
   };
 

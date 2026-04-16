@@ -52,17 +52,18 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const location = useLocation();
 
-  // Theme Startup - reads unified key, sets data-theme attribute
+  // Close search on Escape key
   useEffect(() => {
-    const savedTheme = localStorage.getItem('nova-theme') || 'blue';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    // Add .dark class for dark variants so Tailwind dark: utilities still work
-    if (savedTheme === 'dark' || savedTheme === 'natural' || savedTheme === 'warm') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isSearchOpen) {
+        setIsSearchOpen(false);
+        setSearchQuery('');
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isSearchOpen]);
+
 
   const searchResults = searchQuery.trim() 
     ? notes.filter(n => n.title?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5)

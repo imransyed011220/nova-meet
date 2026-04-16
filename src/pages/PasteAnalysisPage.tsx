@@ -33,6 +33,7 @@ export const PasteAnalysisPage: React.FC = () => {
       showToast("Please provide a session transcript", "error");
       return;
     }
+    if (isProcessing) return; // Prevent double-click
 
     setIsProcessing(true);
     setError(null);

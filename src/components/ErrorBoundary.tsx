@@ -39,19 +39,19 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (hasError) {
       return (
         <div className="min-h-[400px] flex items-center justify-center p-6">
-          <div className="max-w-md w-full bg-white dark:bg-corporate-secondary border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-8 text-center space-y-6">
-            <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto text-red-500">
+          <div className="max-w-md w-full bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xl p-8 text-center space-y-6">
+            <div className="w-16 h-16 bg-[var(--err)]/10 rounded-full flex items-center justify-center mx-auto text-[var(--err)]">
               <AlertTriangle size={32} />
             </div>
             
             <div className="space-y-2">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Something went wrong</h2>
-              <p className="text-sm text-slate-500">
+              <h2 className="text-xl font-bold text-[var(--text)]">Something went wrong</h2>
+              <p className="text-sm text-[var(--text3)]">
                 An unexpected error occurred while rendering this page.
               </p>
               {error && (
-                <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-900 rounded-lg text-left overflow-hidden">
-                  <p className="text-[10px] font-mono text-red-500 break-all">
+                <div className="mt-4 p-3 bg-[var(--soft2)] rounded-lg text-left overflow-hidden">
+                  <p className="text-[10px] font-mono text-[var(--err)] break-all">
                     {error.toString()}
                   </p>
                 </div>
@@ -61,14 +61,14 @@ export class ErrorBoundary extends React.Component<Props, State> {
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
                 onClick={() => window.location.reload()}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 bg-corporate-primary text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 bg-[var(--accent)] text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all"
               >
                 <RefreshCcw size={14} />
                 Reload Page
               </button>
               <button
                 onClick={() => window.location.href = '/dashboard'}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 border border-[var(--border)] text-[var(--text2)] rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[var(--soft2)] transition-all"
               >
                 <Home size={14} />
                 Dashboard
